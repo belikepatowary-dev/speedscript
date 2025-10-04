@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SpeedScript — Typing Test (Enhanced)</title>
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#ffffff; --muted:#6b7280; --accent:#6c5ce7; --danger:#ff6b6b; --good:#16a34a;
+      --text:#0f172a; --glass: rgba(255,255,255,0.6); --mono: 'Courier New', Courier, monospace;
+    }
+    [data-theme="dark"]{ --bg:#071226; --card:#071226; --muted:#9aa5b1; --accent:#7c5cff; --text:#e6eef8; --glass: rgba(255,255,255,0.03); }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial; background:linear-gradient(180deg,var(--bg), #eef3ff); color:var(--text)}
+    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{width:100%;max-width:1100px;background:var(--card);border-radius:14px;padding:20px;box-shadow:0 8px 30px rgba(18,22,40,0.06);}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#4f46e5);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
+    .panel{padding:16px;border-radius:12px;background:linear-gradient(180deg,var(--glass),transparent);}
+    .typing-area{min-height:160px;padding:18px;border-radius:10px;background:transparent;border:2px dashed rgba(0,0,0,0.06);position:relative;overflow:hidden}
+    .words{font-size:20px;line-height:1.8;word-wrap:break-word;user-select:none}
+    .words span{padding-right:6px}
+    .words span.current{background:linear-gradient(90deg, rgba(124,58,237,0.12), rgba(99,102,241,0.08));border-radius:4px;padding:2px 6px}
+    .caret{display:inline-block;width:2px;height:1.1em;background:var(--text);vertical-align:middle;margin-left:2px;animation:blink 1s steps(1) infinite}
+    @keyframes blink{50%{opacity:0}}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid rgba(0,0,0,0.06);text-align:left}
+    .keyboard{margin-top:12px;padding:10px;border-radius:8px}
+    .key{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;margin:3px;border-radius:6px;background:white;box-shadow:0 1px 0 rgba(0,0,0,0.04);font-size:12px}
+    .small-muted{font-size:12px;color:var(--muted)}
+    button{cursor:pointer}
+  </style>
+</head>
+<body data-theme="light">
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <div class="brand">
+          <div class="logo">SS</div>
+          <div>
+            <h1>SpeedScript</h1>
+            <p class="small-muted">Typing test — results sharing, CSV export, local leaderboard, heatmap & themes</p>
+          </div>
+        </div>
+        <div>
+          <button id="themeBtn">Toggle Theme</button>
+        </div>
+      </header>
+
+      <div class="grid">
+        <div>
+          <div class="panel" style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="display:flex;gap:10px;align-items:center">
+                <div><strong id="wpm">0</strong><div style="font-size:12px;color:var(--muted)">WPM</div></div>
+                <div><strong id="accuracy">100%</strong><div style="font-size:12px;color:var(--muted)">Accuracy</div></div>
+                <div><strong id="time">30s</strong><div style="font-size:12px;color:var(--muted)">Time</div></div>
+              </div>
+              <div>
+                <button id="restart" style="margin-right:8px">Restart</button>
+                <button id="changeWords">New Text</button>
+              </div>
+            </div>
+
+            <div class="typing-area" id="typingArea" tabindex="0">
+              <div class="words" id="words"></div>
+            </div>
+
+            <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
+              <input id="hiddenInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="opacity:0;height:0;width:0;position:absolute;pointer-events:none">
+              <div class="small-muted">Click the area and type. Press Esc to stop.</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3 style="margin-top:0">Results & Leaderboard</h3>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <button id="showResults">Show Last Result</button>
+              <button id="downloadCSV">Download CSV</button>
+              <button id="clearBoard">Clear Local Board</button>
+            </div>
+            <table id="leaderboard">
+              <thead><tr><th>Name</th><th>WPM</th><th>Acc</th><th>Date</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel right">
+          <h3 style="margin-top:0">Settings</h3>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label>Test time</label>
+            <select id="timeSelect"><option value="15">15</option><option value="30" selected>30</option><option value="60">60</option></select>
+            <label>Words</label>
+            <select id="wordPool"><option value="english">English</option><option value="programming">Programming</option></select>
+            <label>Sound</label>
+            <select id="soundSelect"><option value="on">On</option><option value="off">Off</option></select>
+            <div class="small-muted">Heatmap:</div>
+            <div id="keyboard" class="keyboard"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="resultModal" style="display:none">
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center">
+      <div style="background:white;padding:16px;border-radius:8px" id="resultCard">
+        <h3>Result</h3>
+        <div><strong id="modalWPM">0</strong> WPM — <span id="modalAcc">100%</span></div>
+        <div style="margin-top:8px">
+          <input id="playerName" placeholder="Your name"><button id="saveScore">Save</button>
+          <button id="shareImage">Share Image</button>
+          <button id="closeModal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- html2canvas CDN -->
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+  <script>
+    // minimal enhanced JS (core logic)
+    const pools = {
+      english: "the be to of and a in that have i it for not on with he as you do at this but his by from they we say her she or an will my one all would there their after first new because day use way even want how look also more".split(" "),
+      programming: "function variable constant let const return if else for while switch case class object array string boolean null undefined async await promise callback".split(" ")
+    };
+    const wordsEl = document.getElementById('words');
+    const wpmEl = document.getElementById('wpm');
+    const accuracyEl = document.getElementById('accuracy');
+    const timeEl = document.getElementById('time');
+    const timeSelect = document.getElementById('timeSelect');
+    const wordPool = document.getElementById('wordPool');
+    const hiddenInput = document.getElementById('hiddenInput');
+    const keyboardWrap = document.getElementById('keyboard');
+    const leaderboardTable = document.querySelector('#leaderboard tbody');
+
+    let words = [];
+    let current = 0;
+    let started = false;
+    let timer = null;
+    let totalTime = parseInt(timeSelect.value,10);
+    let timeLeft = totalTime;
+    let typed = 0, correct = 0, lastResult=null;
+    let heatmap = {};
+
+    function gen(n=80){ const pool = pools[wordPool.value]||pools.english; const out=[]; for(let i=0;i<n;i++) out.push(pool[Math.floor(Math.random()*pool.length)]); return out;}
+    function render(){ wordsEl.innerHTML=''; words.forEach((w,i)=>{ const sp=document.createElement('span'); sp.textContent=w; if(i===current) sp.classList.add('current'); wordsEl.appendChild(sp); }); addCaret(); }
+    function addCaret(){ const curr = wordsEl.querySelector('span.current'); if(!curr) return; const c=document.createElement('span'); c.className='caret'; curr.appendChild(c); }
+    function reset(){ clearInterval(timer); started=false; current=0; typed=0; correct=0; timeLeft = parseInt(timeSelect.value,10); totalTime=timeLeft; words=gen(80); render(); update(); renderKeyboard(); }
+    function start(){ if(started) return; started=true; timer=setInterval(()=>{ timeLeft--; timeEl.textContent=timeLeft+'s'; if(timeLeft<=0) end(); },1000); }
+    function end(){ clearInterval(timer); started=false; compute(); hiddenInput.blur(); lastResult={wpm:parseInt(wpmEl.textContent,10),accuracy:accuracyEl.textContent,chars:typed,date:new Date().toISOString()}; }
+    function compute(){ const elapsed=totalTime-timeLeft||1; const minutes=Math.max(elapsed/60,1/60); const wpm=Math.round((correct/5)/minutes); wpmEl.textContent=isFinite(wpm)?wpm:0; const acc=typed===0?100:Math.round((correct/typed)*100); accuracyEl.textContent=acc+'%'; }
+    function update(){ const elapsed=totalTime-timeLeft||1; const minutes=Math.max(elapsed/60,1/60); const wpm=Math.round((correct/5)/minutes); wpmEl.textContent=isFinite(wpm)?wpm:0; const acc=typed===0?100:Math.round((correct/typed)*100); accuracyEl.textContent=acc+'%'; }
+
+    function handle(e){ if(!started) start(); const key=e.key; if(key.length===1){ typed++; recordHeat(key); const sp=wordsEl.children[current]; const typedSoFar=(sp.getAttribute('data-typed')||'')+key; sp.setAttribute('data-typed',typedSoFar); if(words[current].startsWith(typedSoFar)){ correct++; sp.classList.remove('incorrect'); } else { sp.classList.add('incorrect'); } } else if(key==='Backspace'){ const sp=wordsEl.children[current]; const t=sp.getAttribute('data-typed')||''; if(t.length>0){ sp.setAttribute('data-typed', t.slice(0,-1)); typed=Math.max(0,typed-1); recompute(); } } else if(key===' '){ typed++; const sp=wordsEl.children[current]; const t=sp.getAttribute('data-typed')||''; if(t===words[current]) sp.classList.add('correct'); else sp.classList.add('incorrect'); sp.classList.remove('current'); current++; if(current>=words.length-10) words=words.concat(gen(40)); if(wordsEl.children[current]) wordsEl.children[current].classList.add('current'); addCaret(); } update(); }
+
+    function recompute(){ correct=0; typed=0; for(let i=0;i<wordsEl.children.length;i++){ const sp=wordsEl.children[i]; const t=sp.getAttribute('data-typed')||''; typed+=t.length; for(let j=0;j<t.length;j++) if(words[i]&&words[i][j]===t[j]) correct++; } }
+
+    function recordHeat(k){ const key=k.toLowerCase(); if(!key.match(/[a-z0-9]/)) return; heatmap[key]=(heatmap[key]||0)+1; renderKeyboardHeat(); }
+
+    function renderKeyboard(){ const layout=['qwertyuiop','asdfghjkl','zxcvbnm']; keyboardWrap.innerHTML=''; layout.forEach(r=>{ const row=document.createElement('div'); r.split('').forEach(k=>{ const el=document.createElement('div'); el.className='key'; el.dataset.key=k; el.textContent=k; row.appendChild(el); }); keyboardWrap.appendChild(row); }); renderKeyboardHeat(); }
+    function renderKeyboardHeat(){ const vals=Object.values(heatmap); const max=vals.length?Math.max(...vals):1; document.querySelectorAll('.key').forEach(el=>{ const k=el.dataset.key; const v=heatmap[k]||0; const intensity=v/max; if(v>0) el.style.background=`linear-gradient(180deg, rgba(124,58,237,${0.12+intensity*0.45}), rgba(99,102,241,${0.06+intensity*0.25}))`; else el.style.background='white'; el.style.transform=v?`scale(${1+intensity*0.08})`:'none'; }); }
+
+    function saveBoard(name){ const board=JSON.parse(localStorage.getItem('ss_board')||'[]'); board.push({name:name||'Anon',wpm:parseInt(wpmEl.textContent,10),accuracy:accuracyEl.textContent,date:new Date().toISOString()}); board.sort((a,b)=>b.wpm-a.wpm); localStorage.setItem('ss_board', JSON.stringify(board)); renderBoard(); }
+    function renderBoard(){ const board=JSON.parse(localStorage.getItem('ss_board')||'[]'); leaderboardTable.innerHTML=''; board.slice(0,50).forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.name}</td><td>${r.wpm}</td><td>${r.accuracy}</td><td>${new Date(r.date).toLocaleString()}</td>`; leaderboardTable.appendChild(tr); }); }
+    function downloadCSV(){ const board=JSON.parse(localStorage.getItem('ss_board')||'[]'); if(!board.length){ alert('No scores yet'); return; } const header=['Name','WPM','Accuracy','Date']; const rows=board.map(r=>[r.name,r.wpm,r.accuracy,r.date]); const csv=[header].concat(rows).map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\\n'); const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='speedscript_scores.csv'; document.body.appendChild(a); a.click(); a.remove(); }
+    function shareImage(){ const card=document.getElementById('resultCard'); html2canvas(card,{scale:2}).then(canvas=>canvas.toBlob(b=>{ const file=new File([b],'speedscript-result.png',{type:'image/png'}); if(navigator.canShare&&navigator.canShare({files:[file]})){ navigator.share({files:[file],title:'SpeedScript result'}).catch(()=>downloadBlob(b,'speedscript-result.png')); } else downloadBlob(b,'speedscript-result.png'); })); }
+    function downloadBlob(b,fn){ const url=URL.createObjectURL(b); const a=document.createElement('a'); a.href=url; a.download=fn; document.body.appendChild(a); a.click(); a.remove(); }
+
+    // events
+    document.getElementById('themeBtn').addEventListener('click',()=>{ const t=document.body.getAttribute('data-theme')==='dark'?'light':'dark'; document.body.setAttribute('data-theme',t); });
+    document.getElementById('restart').addEventListener('click',reset);
+    document.getElementById('changeWords').addEventListener('click',()=>{ words=gen(80); render(); });
+    hiddenInput.addEventListener('keydown', (e)=>{ handle(e); e.preventDefault(); });
+    document.addEventListener('keydown', (e)=>{ if(document.activeElement===hiddenInput) return; hiddenInput.focus(); hiddenInput.dispatchEvent(new KeyboardEvent('keydown',{key:e.key})); e.preventDefault(); });
+
+    document.getElementById('showResults').addEventListener('click',()=>{ if(!lastResult){ alert('No result yet'); return; } document.getElementById('resultModal').style.display='block'; document.getElementById('modalWPM').textContent=lastResult.wpm; document.getElementById('modalAcc').textContent=lastResult.accuracy; });
+    document.getElementById('closeModal').addEventListener('click',()=>document.getElementById('resultModal').style.display='none');
+    document.getElementById('saveScore').addEventListener('click',()=>{ const name=document.getElementById('playerName').value||'Anonymous'; saveBoard(name); document.getElementById('resultModal').style.display='none'; });
+    document.getElementById('downloadCSV').addEventListener('click',downloadCSV);
+    document.getElementById('clearBoard').addEventListener('click',()=>{ if(confirm('Clear?')){ localStorage.removeItem('ss_board'); renderBoard(); }});
+
+    // init
+    words=gen(80); render(); renderBoard(); timeEl.textContent=timeLeft+'s';
+  </script>
+</body>
+</html>
